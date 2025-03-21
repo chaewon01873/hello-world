@@ -1,0 +1,31 @@
+# 꽉찬 사각형
+void main() {
+  var n = 10;
+  var result = "";
+  for(var y = 1 ; y <= n ; y++) {
+    for(var x = 0 ; x < n ; x++) {
+      result += "=";
+    }
+    result += "\n";
+  }
+  print(result);
+}
+
+# 테두리 사각형
+void main() {
+  var n = 10;
+  var result = "";
+  for(var y = 0 ; y < n ; y++) {
+    for(var x = 0 ; x < n ; x++) {
+      var c = y == 0 || y == n-1 || x == 0 || x == n-1;
+      if(c) {
+      result += "=";
+    }
+      else {
+    result += " ";
+  }
+}
+    result += "\n";
+}
+  print(result);
+}
