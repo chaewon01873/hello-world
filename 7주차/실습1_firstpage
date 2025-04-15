@@ -1,0 +1,29 @@
+import 'package:a_7_1/Person.dart';
+import 'package:a_7_1/second_page.dart';
+import 'package:flutter/material.dart';
+
+class FirstPage extends StatelessWidget {
+  const FirstPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('FirstPage')),
+      body: Text('!!!'),
+      floatingActionButton: ElevatedButton(
+        onPressed: () async {
+          final person = Person('홍길동', 20);
+
+          // var result = await Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => SecondPage(person: person,)),
+          // );
+          var result = await Navigator.pushNamed(context, '/second', arguments: person);
+          
+          print(result);
+        },
+        child: Text('다음 페이지로'),
+      ),
+    );
+  }
+}
