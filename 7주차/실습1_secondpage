@@ -1,0 +1,22 @@
+import 'package:flutter/material.dart';
+import 'package:a_7_1/Person.dart';
+
+class SecondPage extends StatelessWidget {
+  final Person? person;
+
+  const SecondPage({super.key, this.person});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('SecondPage')),
+      body: Text('${person?.name}, ${person?.age}'),
+      floatingActionButton: ElevatedButton(
+        onPressed: () {
+          Navigator.pop(context, "동작했습니다!");
+        },
+        child: Text('이전 페이지로'),
+      ),
+    );
+  }
+}
