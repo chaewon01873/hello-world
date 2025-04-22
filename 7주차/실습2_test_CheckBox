@@ -1,0 +1,47 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+class TestCheckBox extends StatefulWidget {
+  const TestCheckBox({super.key});
+
+  @override
+  State<TestCheckBox> createState() => _CheckBoxState();
+}
+
+class _CheckBoxState extends State<TestCheckBox> {
+  bool? isCheckd1 = false;
+  bool isCheckd2 = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text('Checkbox / Switch테스트'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Checkbox(
+              value: isCheckd1,
+              onChanged: (value) {
+              setState(() {
+                isCheckd1 = value;
+              });
+            },
+            ),
+            SizedBox(height: 80),
+
+            Switch(value: isCheckd2, onChanged: (value) {
+              setState(() {
+                isCheckd2 = value;
+              });
+            },
+            ),
+          ],
+        ),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
