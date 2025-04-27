@@ -1,0 +1,51 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+class TestDialog extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(title: Text('Dialog 테스트')),
+    body: Padding(padding: EdgeInsets.all(16.0),
+    child: Column(
+    children: [
+      ElevatedButton(
+    onPressed: () async {
+        showDialog(
+        context: context,
+        barrierDismissble: true,
+    builder: (BuildContext context) {
+          return AlertDialog(
+          title: Text('제목'),
+    content: SingleChildScrollView(
+    child: ListBody(
+    children: [
+      Text('Alert Dialog입니다'),
+    Text('OK를 눌러 닫습니다'),
+    ],
+    ),
+    ),
+    actions: [
+      TextButton(
+    child: Text('OK'),
+    onPressed: () {
+      Navigator.of(context).pop(true);
+    },
+    ),
+    TextButton(
+    child: Text('Cancel'),
+    onPressed: () {
+    Navigator.of(context).pop(false);
+    },
+    ),
+    ]
+          );
+    },
+    );
+    }, child: Text('Alert Dialog')),
+    ],
+    ),
+    );
+  }
+}
+// 오류 걸림
