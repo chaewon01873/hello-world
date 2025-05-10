@@ -1,0 +1,421 @@
+여기서 StatelessWidget 클래스와 StatefulWidget 클래스의 동작 방법 차이를 이해하고 넘어가도록 하겠습니다.
+
+6.3.1 StatelessWidget 클래스 동작
+build() 메서드가 언제 호출되는지 확인해봅시다. 각 화면의 build()메서드의 return 앞에 어떤 화면인지 확인할 수 있도록 (1)print() 로그를 작성합니다.
+
+--------------------------------------------------------------------------------------------------------------
+
+class FirstPage extends StatelessWidget {
+	@override
+    Widget build(BuildContext context) {
+        	print("FirstPage build()"); ----(1)
+		return Scaffold(...생략...);
+    }
+}
+
+class SecondPage extends StatelessWidget {
+	@override
+	Widget build(BuildContext context) {
+		print("SecondPage build()"); ----(1)
+		return Scaffold(...생략...);
+	}
+}
+
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+(2) 앱 실행 > (3) push로 두 번째 페이지 표시 > (4) pop으로 ok 값을 가지고 돌아가기를 실행해 봅니다.
+
+--------------------------------------------------------------------------------------------------------------
+I/flutter ( 7931): FirstPage build()    <- 앱 실행 (2)
+I/flutter ( 7931): SecondPage build() <- push (3)
+I/flutter ( 7931): ok                      <- 첫 페이지로 결과가 전달됨 (4)
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+화면이 표시되면서 build() 메서드가 호출됩니다. pop() 메서드로 뒤로 돌아갈 때는 두 번째 화면에서 받은 (4) ok 문자열이 출력되었습니다.
+
+6.3.2 StatefulWidget 클래스 동작
+상태를 가지는 StatefulWidget 클래스 경우에도 동일하게 동작합니다. 다음과 같이 두 페이지를 StatefulWidget 클래스로 작성했을 때 로그가 어떻게 출력되는지 확인해보겠습니다.
+
+--------------------------------------------------------------------------------------------------------------
+
+class FirstStatefulPage extends StatefulWidget {
+	@override
+	_FirstStatefulPageState createState() => _FirstStatefulPageState();
+}
+
+class _FirstStatefulPageState extends State<FirstStatefulPage> {
+	@override
+	Widget build(BuildContext context) {
+		print('FirstPage build()'); ----(2)
+		return Scaffold(
+			appBar: AppBar(
+				title: Text('First'),
+			),
+			body: ElevateButton(
+				child: Text('다음 페이지로'),
+				onPressed: () {
+					final person = Person('홍길동', 20);
+					Navigator.push( ----(1)
+						context,
+						MaterialPageRoute(builder: (context) => SecondStatefulPage(person: person)),
+					);
+				},
+			),
+		);
+	}
+}
+
+class SecondStatefulPage extends StatefulWidget {
+	final Person person;
+
+	SecondStatefulPage({Key key, @required this.person}) : super(key: key);
+
+	@override
+	_SecondStatefulPageState createState() => _SecondStatefulPageState();
+}
+
+class _SecondStatefulPageState extends State<SecondStatefulPage> {
+	@override
+	Widget build(BuildContext context) {
+		print('SecondPage build()'); ----(3)
+		return Scaffold(
+			appBar: AppBar(
+				title: Text(widget.person.name),
+			),
+			body: ElevatedButton(
+				child: Text('이전 ㅓ페이지로'),
+				onPressed: () {
+					Navigator.pop(context);
+				},
+			),
+		);
+	}
+}
+
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+(1) push() 메서드로 SecondStatefulPage 클래스를 표시한 직후에 (2) FirstStatefulPage 클래스의 build() 메서드와 (3) SecondStatefulPage 클래스의 build() 메서드가 호출됩니다.
+
+--------------------------------------------------------------------------------------------------------------
+// FirstPage 표시
+I/flutter ( 1629): FirstPage build()
+// SecondPage 표시
+I/flutter ( 1629): SecondPage build()
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+build() 메서드는 화면 UI를 새로 그리는 역할을 하기 때문에 앱 성능에 지장을 줄만한 코드 (예를 들어 네트워크에 접속하여 데이터를 다운로드하거나 복잡한 계산을 하는 등)는 작성하면 안 됩니다.
+
+6.3.3 initState, dispose
+그렇다면 위에서 언급했던 네트워크 접속처러머 오래 걸리면서 자주 호출되면 안 되는 처리는 어디에 해야 할까요? StatefulWidget 클래스에는 build() 메서드 외에도 특정 타이밍에 실행되는 여러 메서드가 있습니다. 이러한 메서드들을 생명주기(lifecycle)메서드라고 부릅니다.
+
+initState() 메서드는 위젯이 생성될 때 호출됩니다. dispose() 메서드는 위젯이 완전히 종료될 때(pop될 때) 호출됩니다. 다음과 같이 initState(), dispose() 메서드를 재정의(override)하고 print() 함수로 로그를 출력해봅시다.
+
+--------------------------------------------------------------------------------------------------------------
+
+class _FirstStatefulPageState extends State<FirstStatefulPage> {
+
+	@override
+	void initState() {
+		super.initState();
+		print('FirstPage initState()');
+	}
+	
+	@override
+	void dispose() {
+		super.dispose();
+		print('FirstPage dispose()');
+	}
+
+	@override
+	Widget build(BuildContext context) {
+		print('FirstPage build()');
+		return ...생략...
+	}
+}
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+그리고 두 번째 페이지에도 마찬가지로 로그를 출력하는 코드를 작성합니다.
+
+--------------------------------------------------------------------------------------------------------------
+
+class _SecondStatefulPageState extends State<SecondStatefulPage> {
+
+	@override
+	void initState() {
+		super.initState();
+		print('SecondPage initState()');
+	}
+
+	@override
+	void dispose() {
+		super.dispose();
+		print('SecondPage dispose()');
+	}
+
+	@override
+	Widget build(BuildContext context) {
+		print('SecondPage build()');
+		return ...생략...
+	}
+}
+
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+이제 (1) FirstPage > (2) SecondPage로 push > (3) 뒤로(pop) > (4) 뒤로(pop)를 실행하면 다음과 같이 로그가 출력됩니다. 각 상황을 구분하기 쉽게 주석을 추가했습니다.
+
+--------------------------------------------------------------------------------------------------------------
+
+// FirstPage 표시 (1)
+I/flutter ( 1629): FirstPage initState()
+I/flutter ( 1629): FirstPage build()
+
+// SecondPage 표시 (2)
+I/flutter ( 1629): SecondPage initState()
+I/flutter ( 1629): SecondPage build()
+I/flutter ( 1629): FirstPage build()
+
+// FirstPage로 돌아가기 (3)
+I/flutter ( 1629): FirstPage build()
+I/flutter ( 1629): SecondPage dispose()
+
+// 앱 종료 (4)
+I/flutter ( 1629): FirstPage dispose()
+
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+이 로그대로라면 방금 설명한 대로 build() 메서드에서 복잡한 처리나 너트워크 요청 등을 하면 안된다는 것을 알 수 있습니다.
+예를 들어 페이지가 10단계로 화면 전환되는 앱을 만들었다면 10번째 페이지를 표시할 때 그 아래의 9개 페이지도 모두 build() 메서드가 호출될 수 있습니다. 그렇기 때문에 계산이나 네트워크 요청 등의 로직은 build() 메서드가 아닌 initState() 메서드에서 수행해야 합니다.
+
+그렇다고 하더라고 StatefulWidget 클래스의 build() 메서드가 자주 호출되기 때문에 성능이 안 좋지 않을까 걱정하는 분도 있을 겁니다. 저 또한 그랬지만 구글에서는 이러한 방식에 아무런 문제가 없다고 합니다.
+
+
+
+
+6.4 마치며
+이 장에서는 플러터에서 화면을 전환하는 방법을 제공하는 내비게이션을 배웠습니다.
+ - Navigator 클래스에는 내비게이션 기능을 제공하는 메서드들이 준비되어 있습니다.
+ - 새로운 화면을 표시할 때는 push() 메서드를 사용합니다.
+ - 현재 화면을 종료하고 이전 화면을 표시하려면 pop() 메서드를 사용 합니다.
+ - pop() 메서드의 두 번째 인수에 이전 ㅓ화면으로 전달할 값을 지정할 수 있습니다.
+ - push() 메서드는 반환 타입이 Future며 비동기로 동작하며 작업이 끝날 때까지 대기합니다.
+ - Future 값을 받으려면 async - await 패턴으르 사용합니다.
+ - 비동기 코드가 실행 중일 때도 앱은 멈추지 않습니다.
+ - StatefulWidget 클래스는 상황에 따라 build() 메서드가 자주 호출될 수 있습니다.
+ - initState() 메서드는 StatefulWidget 클래스가 생성될 때 호출됩니다.
+ - dispose() 메서드는 StatefulWidget 클래스가 종료될 때 호출됩니다.
+
+------------------------------------------------------------------------------------------------------------------------------------
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+------------------------------------------------------------------------------------------------------------------------------------
+
+📚 6장 요약: Flutter의 Navigator 및 위젯 생명주기
+✅ 1. StatelessWidget 동작 방식
+StatelessWidget은 상태를 가지지 않는 위젯으로, UI가 한 번 정해지면 변하지 않음
+
+build() 메서드는 위젯이 화면에 그려질 때마다 호출
+
+페이지를 push() → 새로운 화면 생성
+페이지를 pop() → 이전 화면으로 돌아감
+
+단순 화면 구성용에 적합
+
+예시 로그 흐름
+
+scss
+복사편집
+앱 실행 → FirstPage build()
+push → SecondPage build()
+pop → ok 값 반환
+📌 팁: StatelessWidget은 화면 간 상태 변화가 필요 없는 경우 사용하세요. 예: 단순한 정보 페이지
+
+✅ 2. StatefulWidget 동작 방식
+StatefulWidget은 내부 상태를 가지고 변화 가능한 위젯
+
+화면 전환(push/pop)시에도 위젯 상태를 보존하거나 종료 가능
+
+StatefulWidget에는 3개의 주요 메서드가 있음:
+
+
+메서드	호출 시점
+initState()	위젯 생성 시 1회 호출
+build()	위젯이 그려질 때마다 호출
+dispose()	위젯이 완전히 사라질 때 1회 호출
+예시 로그 흐름
+
+css
+복사편집
+FirstPage 진입: initState() → build()
+SecondPage 진입: initState() → build() → FirstPage build()
+뒤로(pop): FirstPage build() → SecondPage dispose()
+앱 종료 시: FirstPage dispose()
+📌 팁: 복잡한 로직(예: 네트워크 요청, 무거운 계산)은 반드시 initState()에서 실행하고, build()에서는 UI만 구성하세요!
+
+✅ 3. Navigator 동작 요약
+Navigator는 Flutter에서 **화면 전환(내비게이션)**을 담당하는 클래스
+
+주요 메서드:
+
+
+메서드	설명
+push()	새로운 페이지를 스택에 추가
+pop()	현재 페이지를 제거하고 이전 페이지로 돌아감
+push().then()	Future 방식으로 pop 결과값 받을 수 있음
+await push()	async-await 패턴으로 처리 가능
+📌 팁: push/pop은 비동기 처리이기 때문에, await 키워드를 사용하면 pop 결과를 편리하게 받을 수 있습니다.
+
+✅ 4. 성능 관련 주의사항
+build() 메서드는 여러 번 호출될 수 있음
+→ 성능을 해치지 않도록 가벼운 UI 코드만 배치
+
+상태 초기화나 해제는 initState()/dispose()를 활용
+
+🔚 6장의 핵심 요약
+
+항목	설명
+StatelessWidget	상태 없음.build()만 존재
+StatefulWidget	상태 있음.initState()→build()→dispose()순서 호출
+Navigator.push()	새 화면 표시, Future 반환
+Navigator.pop()	현재 화면 종료 + 결과값 전달 가능
+build() 성능 주의사항	무거운 연산은 절대 금지,initState()에서 처리
+✅ 결론
+Flutter에서 위젯 생명주기 이해는 성능 최적화와 버그 방지에 핵심적입니다. 특히 StatefulWidget의 메서드 호출 순서를 이해하고 활용하면, 네트워크 처리, 캐시 관리, 페이지 상태 유지 등을 효율적으로 구현할 수 있어요!
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Flutter StatelessWidget & StatefulWidget 요약
+1. StatelessWidget 동작 방식
+상태를 가지지 않는 위젯.
+
+build() 메서드는 위젯이 화면에 표시될 때마다 호출됨.
+
+화면 전환은 Navigator.push(), 돌아가기는 Navigator.pop() 사용.
+
+코드 예시
+
+dart
+복사편집
+class FirstPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    print("FirstPage build()");
+    return Scaffold(...);
+  }
+}
+dart
+복사편집
+class SecondPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    print("SecondPage build()");
+    return Scaffold(...);
+  }
+}
+로그 흐름 예시
+
+csharp
+복사편집
+앱 실행: FirstPage build()
+push: SecondPage build()
+pop: ok (결과 반환)
+2. StatefulWidget 동작 방식
+내부 상태를 가질 수 있는 위젯.
+
+다음 생명주기 메서드 존재:
+
+
+메서드	호출 시점
+initState()	위젯 생성 시 1회
+build()	UI가 다시 그려질 때마다
+dispose()	위젯이 완전히 제거될 때
+코드 예시
+
+dart
+복사편집
+class FirstStatefulPage extends StatefulWidget {
+  @override
+  _FirstStatefulPageState createState() => _FirstStatefulPageState();
+}
+
+class _FirstStatefulPageState extends State<FirstStatefulPage> {
+  @override
+  void initState() {
+    super.initState();
+    print('FirstPage initState()');
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    print('FirstPage dispose()');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print('FirstPage build()');
+    return Scaffold(...);
+  }
+}
+dart
+복사편집
+class SecondStatefulPage extends StatefulWidget {
+  final Person person;
+  SecondStatefulPage({Key? key, required this.person}) : super(key: key);
+
+  @override
+  _SecondStatefulPageState createState() => _SecondStatefulPageState();
+}
+
+class _SecondStatefulPageState extends State<SecondStatefulPage> {
+  @override
+  void initState() {
+    super.initState();
+    print('SecondPage initState()');
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    print('SecondPage dispose()');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print('SecondPage build()');
+    return Scaffold(...);
+  }
+}
+로그 흐름 예시
+
+scss
+복사편집
+(1) FirstPage 진입
+initState()
+build()
+
+(2) SecondPage 진입
+initState()
+build()
+FirstPage build()
+
+(3) pop → FirstPage로 돌아감
+FirstPage build()
+SecondPage dispose()
+
+(4) 앱 종료
+FirstPage dispose()
+3. Navigator 정리
+push(): 새 화면 표시, Future 반환.
+
+pop(): 현재 화면 닫고 이전 화면으로 돌아감. 결과값 전달 가능.
+
+await push()로 비동기 방식으로 결과 받을 수 있음.
+
+4. 주의할 점
+build()는 자주 호출되므로 무거운 연산 절대 금지.
+
+네트워크 요청, 초기 데이터 설정 등은 반드시 initState()에서 처리.
+
+앱 성능에 영향을 줄 수 있는 연산은 생명주기 메서드를 적극 활용해야 함.
