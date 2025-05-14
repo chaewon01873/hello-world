@@ -1,0 +1,82 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: CurrentTimeApp(),
+    );
+  }
+}
+
+class CurrentTimeApp extends StatefulWidget {
+  @override
+  _CurrentTimeAppState createState() => _CurrentTimeAppState();
+}
+
+class _CurrentTimeAppState extends State<CurrentTimeApp> {
+  String currentTime = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTime(); // 앱 시작 시 한 번 표시
+  }
+
+  void _updateTime() {
+    final now = DateTime.now();
+    final time = '${now.year}-${_twoDigits(now.month)}-${_twoDigits(now.day)}\n'
+        '${now.hour < 12 ? '오전' : '오후'} '
+        '${_twoDigits(now.hour % 12 == 0 ? 12 : now.hour % 12)}:'
+        '${_twoDigits(now.minute)}:'
+        '${_twoDigits(now.second)}';
+
+    setState(() {
+      currentTime = time;
+    });
+  }
+
+  String _twoDigits(int n) {
+    return n.toString().padLeft(2, '0');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('현재 시각'),
+        centerTitle: true,
+        backgroundColor: Colors.blueGrey,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              currentTime,
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                color: Colors.black, // 고정된 텍스트 색상
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: _updateTime,
+              child: Text('시간 갱신'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                textStyle: TextStyle(fontSize: 20),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
